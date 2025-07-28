@@ -118,19 +118,7 @@
                     </div>
                 </div>
 
-                <!-- 투자 정보 -->
-                <div class="input-box">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-800">🎯 투자 정보</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">투자 유치 목표</label>
-                            <input type="text" id="investment" value="400,000" 
-                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                                   oninput="formatNumber(this); calculate()">
-                            <span class="text-xs text-gray-500">단위: 천원 (예: 400,000 = 4억원)</span>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- 고객 지표 -->
                 <div class="input-box">
@@ -177,16 +165,12 @@
                     <h2 class="text-xl font-bold mb-6 text-center">📊 밸류에이션 결과</h2>
                     <div class="space-y-4">
                         <div class="metric-box">
-                            <div class="text-sm opacity-90">기업가치 (Pre-money)</div>
+                            <div class="text-sm opacity-90">기업가치 평가</div>
                             <div class="text-2xl font-bold"><span id="valuation">0</span>억원</div>
                         </div>
                         <div class="metric-box">
-                            <div class="text-sm opacity-90">투자 후 가치</div>
-                            <div class="text-2xl font-bold"><span id="postMoney">0</span>억원</div>
-                        </div>
-                        <div class="metric-box">
-                            <div class="text-sm opacity-90">취득 지분율</div>
-                            <div class="text-2xl font-bold"><span id="equity">0</span>%</div>
+                            <div class="text-sm opacity-90">주당 가치 (발행주식 100만주 기준)</div>
+                            <div class="text-xl font-bold"><span id="sharePrice">0</span>원/주</div>
                         </div>
                     </div>
                 </div>
@@ -221,39 +205,31 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">주당 가치</span>
-                            <span id="sharePrice" class="font-semibold">0원</span>
+                            <span id="sharePrice2" class="font-semibold">0원</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- 투자 조건 -->
-                <div class="bg-green-50 rounded-xl p-6 border border-green-200">
-                    <h3 class="text-lg font-semibold text-green-800 mb-4">💼 투자 조건</h3>
-                    <div class="space-y-2">
+                <!-- 투자조건 간단 요약 -->
+                <div class="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-4">💡 기업가치 기반 참고 수치</h3>
+                    <div class="space-y-2 text-sm">
                         <div class="flex justify-between">
-                            <span class="text-green-700">투자금액:</span>
-                            <span id="investAmount" class="font-semibold text-green-800">4억원</span>
+                            <span class="text-blue-700">4억원 투자시 취득지분:</span>
+                            <span id="sampleEquity" class="font-semibold text-blue-800">0%</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-green-700">취득지분:</span>
-                            <span id="finalEquity" class="font-semibold text-green-800">0%</span>
+                            <span class="text-blue-700">10억원 투자시 취득지분:</span>
+                            <span id="sampleEquity2" class="font-semibold text-blue-800">0%</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-green-700">주당가치:</span>
-                            <span id="shareValue" class="font-semibold text-green-800">0원</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-green-700">전환가격:</span>
-                            <span id="conversionPrice" class="font-semibold text-green-800">0원</span>
-                        </div>
+                        <p class="text-xs text-blue-600 mt-2">※ 실제 CB 조건은 아래에서 상세 설정 가능</p>
                     </div>
                 </div>
 
-                <!-- 밸류에이션 리포트 다운로드 -->
-                <button onclick="downloadReport()" 
-                        class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl">
-                    📥 밸류에이션 리포트 다운로드
-                </button>
+                <!-- 밸류에이션 결과 확인 -->
+                <div class="bg-gradient-to-r from-green-600 to-green-700 text-white font-bold py-4 px-6 rounded-xl text-center">
+                    ✅ 기업가치 산정 완료! 아래에서 CB 조건을 설정해보세요
+                </div>
             </div>
         </div>
 
@@ -297,15 +273,23 @@
                 <!-- CB 조건 설정 -->
                 <div class="space-y-6">
                     <div class="bg-purple-50 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-purple-800 mb-4">🔧 CB 조건 설정</h3>
+                        <h3 class="text-lg font-semibold text-purple-800 mb-4">🔧 CB 투자 조건 설정</h3>
                         
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">전환가격 (원/주)</label>
-                                <input type="text" id="cbConversionPrice" 
+                                <label class="block text-sm font-medium text-gray-700 mb-2">투자 금액 (억원)</label>
+                                <input type="text" id="cbInvestmentAmount" value="4" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" 
-                                       oninput="formatNumber(this); calculateCB()">
-                                <span class="text-xs text-gray-500">주식으로 바꿀 때의 주당 가격 (자동계산됨)</span>
+                                       oninput="calculateCB()">
+                                <span class="text-xs text-gray-500">투자하고자 하는 금액을 억원 단위로 입력</span>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">전환 프리미엄 (%)</label>
+                                <input type="range" id="conversionPremium" min="10" max="50" step="5" value="20" 
+                                       class="w-full" oninput="updatePremiumDisplay(); calculateCB()">
+                                <span class="text-xs text-gray-500">현재 주가 대비 전환가격 프리미엄: <span id="premiumDisplay">20</span>%</span>
+                                <div class="text-xs text-gray-400 mt-1">※ 일반적으로 15-25% 수준</div>
                             </div>
                             
                             <div class="grid grid-cols-2 gap-4">
@@ -314,36 +298,38 @@
                                     <select id="maturity" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" onchange="calculateCB()">
                                         <option value="3">3년</option>
                                         <option value="5">5년</option>
+                                        <option value="7">7년</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">연이자율 (%)</label>
-                                    <input type="range" id="interestRate" min="1" max="6" step="0.5" value="3" 
+                                    <input type="range" id="interestRate" min="1" max="8" step="0.5" value="3" 
                                            class="w-full" oninput="updateInterestDisplay(); calculateCB()">
                                     <span class="text-xs text-gray-500">현재: <span id="interestDisplay">3.0</span>%</span>
                                 </div>
                             </div>
 
                             <div class="border-t pt-4">
-                                <h4 class="font-medium text-gray-800 mb-2">🔄 리픽싱 조건</h4>
+                                <h4 class="font-medium text-gray-800 mb-2">🔄 다운사이드 보호 (리픽싱)</h4>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">발동 기준</label>
                                         <select id="repricing" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" onchange="calculateCB()">
-                                            <option value="70">전환가의 70%</option>
-                                            <option value="80">전환가의 80%</option>
-                                            <option value="90">전환가의 90%</option>
+                                            <option value="70">전환가의 70% 이하</option>
+                                            <option value="80">전환가의 80% 이하</option>
+                                            <option value="90">전환가의 90% 이하</option>
                                         </select>
-                                        <span class="text-xs text-gray-500">주가가 이 수준 이하로 떨어지면 전환가 조정</span>
+                                        <span class="text-xs text-gray-500">주가가 이 수준 이하면 전환가 하향 조정</span>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">강제전환</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">강제전환 조건</label>
                                         <select id="forceConversion" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" onchange="calculateCB()">
-                                            <option value="150">주가 150% 도달시</option>
-                                            <option value="200">주가 200% 도달시</option>
-                                            <option value="0">없음</option>
+                                            <option value="130">전환가의 130% 도달</option>
+                                            <option value="150">전환가의 150% 도달</option>
+                                            <option value="200">전환가의 200% 도달</option>
+                                            <option value="0">강제전환 없음</option>
                                         </select>
-                                        <span class="text-xs text-gray-500">주가 상승시 자동 전환</span>
+                                        <span class="text-xs text-gray-500">주가 상승시 자동 주식 전환</span>
                                     </div>
                                 </div>
                             </div>
@@ -353,10 +339,14 @@
 
                 <!-- CB 계산 결과 -->
                 <div class="space-y-6">
-                    <!-- 전환 조건 요약 -->
+                    <!-- CB 계산 결과 -->
                     <div class="bg-indigo-600 text-white p-6 rounded-lg">
-                        <h3 class="text-lg font-bold mb-4">💰 전환 조건 요약</h3>
+                        <h3 class="text-lg font-bold mb-4">💰 CB 투자 조건 요약</h3>
                         <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span>투자금액</span>
+                                <span id="cbInvestmentDisplay" class="font-bold">4억원</span>
+                            </div>
                             <div class="flex justify-between">
                                 <span>전환가격</span>
                                 <span id="cbConversionPriceDisplay" class="font-bold">0원/주</span>
@@ -369,13 +359,15 @@
                                 <span>취득 지분율</span>
                                 <span id="cbEquityRatio" class="font-bold">0%</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span>리픽싱 하한</span>
-                                <span id="cbRepricingFloor" class="font-bold">0원</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>만기까지 총이자</span>
-                                <span id="cbTotalInterest" class="font-bold">0만원</span>
+                            <div class="border-t border-indigo-300 pt-2 mt-2">
+                                <div class="flex justify-between text-sm">
+                                    <span>리픽싱 하한가</span>
+                                    <span id="cbRepricingFloor" class="font-medium">0원</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>만기까지 총이자</span>
+                                    <span id="cbTotalInterest" class="font-medium">0만원</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -458,6 +450,14 @@
                     </div>
                 </div>
             </div>
+
+            <!-- CB 리포트 다운로드 -->
+            <div class="mt-6">
+                <button onclick="downloadReport()" 
+                        class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl">
+                    📥 CB 투자조건 리포트 다운로드
+                </button>
+            </div>
         </div>
     </div>
 
@@ -502,7 +502,6 @@
             const previousRevenue = parseNumber(document.getElementById('previousRevenue').value);
             const previousNetIncome = parseNumber(document.getElementById('previousNetIncome').value);
             const netIncome = parseNumber(document.getElementById('netIncome').value);
-            const investment = parseNumber(document.getElementById('investment').value);
             const previousCustomers = parseNumber(document.getElementById('previousCustomers').value);
             const newCustomers = parseNumber(document.getElementById('newCustomers').value);
             const totalCustomers = parseNumber(document.getElementById('totalCustomers').value);
@@ -557,12 +556,38 @@
 
             // 밸류에이션 계산 (천원 단위)
             currentValuation = totalRevenue * adjustedMultiple;
-            const postMoneyValuation = currentValuation + investment;
-            const equityPercentage = investment > 0 ? (investment / postMoneyValuation) * 100 : 0;
 
             // 주당 가치 계산 (발행 주식 수를 100만주로 가정)
             const totalShares = 1000000;
             currentSharePrice = currentValuation * 1000 / totalShares; // 원 단위
+
+            // 결과 업데이트
+            document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString() + '천원';
+            document.getElementById('valuation').textContent = (currentValuation / 100000).toFixed(1);
+            document.getElementById('sharePrice').textContent = currentSharePrice.toLocaleString() + '원';
+
+            // 상세 분석 업데이트
+            document.getElementById('industryMultiple').textContent = baseMultiple.toFixed(1) + '배';
+            document.getElementById('growthRate').textContent = growthRate.toFixed(1) + '%';
+            document.getElementById('customerGrowthRate').textContent = customerGrowthRate.toFixed(1) + '%';
+            document.getElementById('subscriptionRatio').textContent = subscriptionRatio.toFixed(1) + '%';
+            document.getElementById('psrMultiple').textContent = adjustedMultiple.toFixed(1) + '배';
+            document.getElementById('revenuePerCustomer').textContent = (revenuePerCustomer / 10).toFixed(0) + '만원';
+            document.getElementById('sharePrice2').textContent = currentSharePrice.toLocaleString() + '원';
+            document.getElementById('profitabilityImprovement').textContent = profitabilityImprovement.toFixed(1) + '%p';
+
+            // 참고 지분율 계산
+            const sample1 = 40000; // 4억원 (천원)
+            const sample2 = 100000; // 10억원 (천원)
+            const equity1 = (sample1 / (currentValuation + sample1)) * 100;
+            const equity2 = (sample2 / (currentValuation + sample2)) * 100;
+            
+            document.getElementById('sampleEquity').textContent = equity1.toFixed(1) + '%';
+            document.getElementById('sampleEquity2').textContent = equity2.toFixed(1) + '%';
+
+            // CB 계산 트리거
+            calculateCB();
+        } totalShares; // 원 단위
 
             // 전역 변수 업데이트
             currentInvestment = investment;
@@ -597,38 +622,48 @@
         function calculateCB() {
             if (currentValuation === 0) return;
 
-            const conversionPrice = currentSharePrice * 1.2; // 20% 프리미엄
+            const investmentAmount = parseFloat(document.getElementById('cbInvestmentAmount').value) || 4;
+            const investmentInThousands = investmentAmount * 100000; // 억원을 천원으로 변환
+            const premium = parseInt(document.getElementById('conversionPremium').value);
+            const conversionPrice = currentSharePrice * (1 + premium / 100);
             const maturity = parseInt(document.getElementById('maturity').value);
             const interestRate = parseFloat(document.getElementById('interestRate').value);
             const repricingThreshold = parseInt(document.getElementById('repricing').value);
             const forceConversionThreshold = parseInt(document.getElementById('forceConversion').value);
 
-            // CB 전환가격 자동 설정
-            document.getElementById('cbConversionPrice').value = Math.round(conversionPrice).toLocaleString();
-
             // 전환 조건 계산
-            const cbShares = Math.floor(currentInvestment * 1000 / conversionPrice);
+            const cbShares = Math.floor(investmentInThousands * 1000 / conversionPrice);
             const totalShares = 1000000;
             const cbEquityRatio = (cbShares / (totalShares + cbShares)) * 100;
             const repricingFloor = conversionPrice * (repricingThreshold / 100);
-            const totalInterest = (currentInvestment * interestRate * maturity / 100) / 100; // 만원 단위
+            const totalInterest = (investmentInThousands * interestRate * maturity / 100) / 100; // 만원 단위
 
             // 결과 표시
+            document.getElementById('cbInvestmentDisplay').textContent = investmentAmount.toFixed(1) + '억원';
             document.getElementById('cbConversionPriceDisplay').textContent = Math.round(conversionPrice).toLocaleString() + '원/주';
             document.getElementById('cbShares').textContent = cbShares.toLocaleString() + '주';
             document.getElementById('cbEquityRatio').textContent = cbEquityRatio.toFixed(1) + '%';
             document.getElementById('cbRepricingFloor').textContent = Math.round(repricingFloor).toLocaleString() + '원';
             document.getElementById('cbTotalInterest').textContent = totalInterest.toFixed(0) + '만원';
 
+            // 전역 변수 업데이트
+            currentInvestment = investmentInThousands;
+
             // 시나리오 테이블 생성
-            generateScenarioTable(conversionPrice, maturity, interestRate);
+            generateScenarioTable(conversionPrice, maturity, interestRate, investmentInThousands);
+        }
+
+        // 프리미엄 표시 업데이트
+        function updatePremiumDisplay() {
+            const premium = document.getElementById('conversionPremium').value;
+            document.getElementById('premiumDisplay').textContent = premium;
         }
 
         // 시나리오 테이블 생성
-        function generateScenarioTable(conversionPrice, maturity, interestRate) {
+        function generateScenarioTable(conversionPrice, maturity, interestRate, investmentAmount) {
             const scenarios = [
                 { name: '실패 (0.5배)', multiplier: 0.5, class: 'text-red-600' },
-                { name: '보통 (1.0배)', multiplier: 1.0, class: 'text-gray-700' },
+                { name: '현재 수준 (1.0배)', multiplier: 1.0, class: 'text-gray-700' },
                 { name: '성공 (2.0배)', multiplier: 2.0, class: 'text-green-600' },
                 { name: '대성공 (5.0배)', multiplier: 5.0, class: 'text-blue-600' }
             ];
@@ -641,16 +676,14 @@
                 let investorReturn, irr;
                 if (sharePrice >= conversionPrice) {
                     // 주식 전환
-                    const shares = Math.floor(currentInvestment * 1000 / conversionPrice);
+                    const shares = Math.floor(investmentAmount * 1000 / conversionPrice);
                     investorReturn = (shares * sharePrice) / 1000;
-                    irr = (Math.pow(investorReturn / (currentInvestment / 100), 1/maturity) - 1) * 100;
+                    irr = (Math.pow(investorReturn / (investmentAmount / 100), 1/maturity) - 1) * 100;
                 } else {
                     // 채권 상환
-                    investorReturn = currentInvestment / 100 + (currentInvestment * interestRate * maturity / 100 / 100);
+                    investorReturn = investmentAmount / 100 + (investmentAmount * interestRate * maturity / 100 / 100);
                     irr = interestRate;
                 }
-
-                const returnRate = ((investorReturn - currentInvestment/100) / (currentInvestment/100)) * 100;
 
                 tableHTML += `
                     <tr class="${scenario.class}">
@@ -674,52 +707,62 @@
         // Exit 시뮬레이션 업데이트
         function updateExitSimulation() {
             const multiplier = parseFloat(document.getElementById('exitMultiplier').value);
+            const investmentAmount = parseFloat(document.getElementById('cbInvestmentAmount').value) || 4;
+            const investmentInThousands = investmentAmount * 100000;
+            const premium = parseInt(document.getElementById('conversionPremium').value);
+            const conversionPrice = currentSharePrice * (1 + premium / 100);
+            
             document.getElementById('exitMultiple').textContent = multiplier.toFixed(1);
 
             const exitValuation = currentValuation * multiplier;
-            const conversionPrice = currentSharePrice * 1.2;
             const sharePrice = exitValuation * 1000 / 1000000;
 
             let investorReturn;
             if (sharePrice >= conversionPrice) {
-                const shares = Math.floor(currentInvestment * 1000 / conversionPrice);
+                const shares = Math.floor(investmentInThousands * 1000 / conversionPrice);
                 investorReturn = (shares * sharePrice) / 1000;
             } else {
                 const interestRate = parseFloat(document.getElementById('interestRate').value);
                 const maturity = parseInt(document.getElementById('maturity').value);
-                investorReturn = currentInvestment / 100 + (currentInvestment * interestRate * maturity / 100 / 100);
+                investorReturn = investmentInThousands / 100 + (investmentInThousands * interestRate * maturity / 100 / 100);
             }
 
-            const returnRate = ((investorReturn - currentInvestment/100) / (currentInvestment/100)) * 100;
+            const returnRate = ((investorReturn - investmentInThousands/100) / (investmentInThousands/100)) * 100;
 
             document.getElementById('exitValuation').textContent = (exitValuation/100000).toFixed(1) + '억원';
             document.getElementById('investorReturn').textContent = investorReturn.toFixed(1) + '억원';
             document.getElementById('totalReturn').textContent = returnRate.toFixed(1) + '%';
         }
 
-        // 리포트 다운로드 함수
+        // 리포트 다운로드 함수 (CB 포함)
         function downloadReport() {
             const companyName = document.getElementById('companyName').value;
             const valuation = (currentValuation / 100000).toFixed(1);
-            const investment = (currentInvestment / 100000).toFixed(1);
+            const investmentAmount = document.getElementById('cbInvestmentAmount').value;
+            const conversionPrice = Math.round(currentSharePrice * (1 + parseInt(document.getElementById('conversionPremium').value) / 100));
             
             const reportContent = `
-${companyName} 밸류에이션 리포트
+${companyName} 밸류에이션 & CB 투자조건 리포트
 =====================================
 
 📊 기업가치 평가 결과
-• 기업가치 (Pre-money): ${valuation}억원
-• 투자금액: ${investment}억원
-• 투자 후 가치: ${((currentValuation + currentInvestment) / 100000).toFixed(1)}억원
-
-📈 주요 지표
+• 기업가치: ${valuation}억원
+• 주당 가치: ${currentSharePrice.toLocaleString()}원 (발행주식 100만주 기준)
 • 업종: ${document.getElementById('industry').value}
 • 총 매출: ${document.getElementById('totalRevenue').textContent}
-• 주당 가치: ${document.getElementById('sharePrice').textContent}
 
-💼 투자 조건
-• 취득 지분율: ${document.getElementById('equity').textContent}
-• 전환가격: ${document.getElementById('conversionPrice').textContent}
+💰 CB 투자 조건
+• 투자금액: ${investmentAmount}억원
+• 전환가격: ${conversionPrice.toLocaleString()}원/주
+• 전환 프리미엄: ${document.getElementById('conversionPremium').value}%
+• 만기: ${document.getElementById('maturity').value}년
+• 연이자율: ${document.getElementById('interestRate').value}%
+• 리픽싱 기준: 전환가의 ${document.getElementById('repricing').value}% 이하
+
+🔍 주요 특징
+• 다운사이드 보호: 원금 + 이자 보장
+• 업사이드 참여: 주식 전환으로 성장 수익 참여
+• 리픽싱 조항: 주가 하락시 전환가 하향 조정
 
 작성일: ${new Date().toLocaleDateString('ko-KR')}
 `;
@@ -728,7 +771,7 @@ ${companyName} 밸류에이션 리포트
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${companyName}_밸류에이션_리포트.txt`;
+            a.download = `${companyName}_CB투자조건_리포트.txt`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
