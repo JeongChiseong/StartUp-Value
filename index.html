@@ -59,42 +59,45 @@
 
                 <!-- 매출 정보 -->
                 <div class="input-box">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-800">💰 매출 정보 (올해 실적, 천원)</h2>
+                    <h2 class="text-lg font-semibold mb-4 text-gray-800">💰 매출 정보 (천원)</h2>
                     <div class="space-y-4">
+                        <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                            <span class="text-sm font-medium text-blue-700">💡 팁: 올해 실적이 우선이지만, 전년도 데이터만 있어도 계산 가능합니다</span>
+                        </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">하드웨어 매출</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">올해 하드웨어 매출</label>
                                 <input type="text" id="hardwareSales" placeholder="36,300" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
-                                <span class="text-xs text-gray-500">장비 판매/보증금</span>
+                                <span class="text-xs text-gray-500">장비 판매/보증금 (올해)</span>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">구독 매출</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">올해 구독 매출</label>
                                 <input type="text" id="subscriptionSales" placeholder="379,260" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
-                                <span class="text-xs text-gray-500">월 구독료 × 12개월</span>
+                                <span class="text-xs text-gray-500">월 구독료 × 12개월 (올해)</span>
                             </div>
                         </div>
                         <div class="bg-blue-50 p-3 rounded-lg">
-                            <span class="text-sm font-medium">총 연매출: </span>
+                            <span class="text-sm font-medium">주요 매출: </span>
                             <span id="totalRevenue" class="text-lg font-bold text-blue-600">0천원</span>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">전년도 매출</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">전년도 총매출</label>
                                 <input type="text" id="previousRevenue" placeholder="250,000" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
-                                <span class="text-xs text-gray-500">작년 동기 총매출</span>
+                                <span class="text-xs text-gray-500">작년 전체 매출 (성장률 계산용)</span>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">순이익</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">순이익 (올해 예상)</label>
                                 <input type="text" id="netIncome" placeholder="150,000" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
-                                <span class="text-xs text-gray-500">올해 순이익</span>
+                                <span class="text-xs text-gray-500">최종 순이익 (있으면 입력)</span>
                             </div>
                         </div>
                     </div>
@@ -178,6 +181,10 @@
                     <h3 class="text-lg font-semibold mb-4">📈 상세 분석</h3>
                     <div class="space-y-3">
                         <div class="flex justify-between">
+                            <span class="text-gray-600">업종 기본 배수</span>
+                            <span id="industryMultiple" class="font-semibold">8.0배</span>
+                        </div>
+                        <div class="flex justify-between">
                             <span class="text-gray-600">매출 성장률</span>
                             <span id="growthRate" class="font-semibold">0%</span>
                         </div>
@@ -190,7 +197,7 @@
                             <span id="subscriptionRatio" class="font-semibold">0%</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-600">PSR 배수</span>
+                            <span class="text-gray-600">최종 PSR 배수</span>
                             <span id="psrMultiple" class="font-semibold">0배</span>
                         </div>
                         <div class="flex justify-between">
@@ -253,6 +260,7 @@
             const previous = getValue('previousRevenue');
             const netIncome = getValue('netIncome');
             const investment = getValue('investment');
+            const industry = document.getElementById('industry').value;
             
             // 고객 지표
             const previousCustomers = getValue('previousCustomers');
@@ -261,81 +269,121 @@
             const mau = getValue('mau');
             
             const total = hardware + subscription;
-            const growth = previous ? ((total - previous) / previous * 100) : 0;
-            const subRatio = total ? (subscription / total * 100) : 0;
             
-            // 고객 성장률 계산
-            const customerGrowth = previousCustomers ? ((totalCustomers - previousCustomers) / previousCustomers * 100) : 0;
-            
-            // 고객당 연매출 계산 (천원 단위)
-            const revenuePerCustomer = totalCustomers ? (total / totalCustomers) : 0;
-            
-            // 순이익률 계산
-            const netMargin = total ? (netIncome / total * 100) : 0;
-            
-            // === 개선된 PSR 배수 계산 (전년도 매출과 순이익 반영) ===
-            let multiplier = 5;
-            
-            // 1. 구독 매출 비중에 따른 배수 조정
-            if (subRatio > 70) multiplier += 3;
-            else if (subRatio > 50) multiplier += 2;
-            else if (subRatio > 30) multiplier += 1;
-            
-            // 2. 매출 성장률에 따른 배수 조정 (전년도 매출 반영)
-            if (growth > 100) multiplier += 3; // 2배 이상 성장
-            else if (growth > 50) multiplier += 2;
-            else if (growth > 30) multiplier += 1;
-            else if (growth < 0) multiplier -= 1; // 매출 감소시 페널티
-            
-            // 3. 순이익률에 따른 배수 조정 (수익성 반영)
-            if (netMargin > 40) multiplier += 2; // 순이익률 40% 이상
-            else if (netMargin > 25) multiplier += 1; // 순이익률 25% 이상
-            else if (netMargin > 15) multiplier += 0.5; // 순이익률 15% 이상
-            else if (netMargin < 5) multiplier -= 0.5; // 낮은 수익성 페널티
-            
-            // 4. 고객 성장률에 따른 배수 조정
-            if (customerGrowth > 100) multiplier += 2; // 고객 2배 이상 증가
-            else if (customerGrowth > 50) multiplier += 1; // 고객 50% 이상 증가
-            else if (customerGrowth < 0) multiplier -= 0.5; // 고객 감소시 페널티
-            
-            // 5. 고객당 매출 단가에 따른 배수 조정 (천원 기준)
-            if (revenuePerCustomer > 10000) multiplier += 1; // 고객당 연 1000만원 이상
-            else if (revenuePerCustomer > 5000) multiplier += 0.5; // 고객당 연 500만원 이상
-            
-            // 6. MAU 대비 고객 비율 (앱 활성도)
-            const appEngagement = totalCustomers && mau ? (mau / totalCustomers) : 0;
-            if (appEngagement > 5) multiplier += 1; // MAU가 고객 수의 5배 이상
-            else if (appEngagement > 2) multiplier += 0.5; // MAU가 고객 수의 2배 이상
-            
-            // 7. 전년도 대비 수익성 개선도 (추가 지표)
-            if (previous && netIncome) {
-                const previousNetMargin = 15; // 전년도 순이익률 가정 (15%)
-                const marginImprovement = netMargin - previousNetMargin;
-                if (marginImprovement > 10) multiplier += 1; // 수익성 10%p 이상 개선
-                else if (marginImprovement > 5) multiplier += 0.5; // 수익성 5%p 이상 개선
+            // === 핵심 매출 지표 계산 (올해 + 전년도 모두 고려) ===
+            let mainRevenue = total; // 올해 실적 우선
+            if (!total && previous) {
+                mainRevenue = previous; // 올해 데이터 없으면 전년도 사용
             }
             
-            // 최소 배수 보장
-            multiplier = Math.max(multiplier, 3);
+            // 성장률 계산 (둘 다 있을 때만)
+            const growth = (total && previous) ? ((total - previous) / previous * 100) : 0;
+            const subRatio = mainRevenue ? (subscription / mainRevenue * 100) : 0;
             
-            const valuation = total * multiplier;
-            const postMoney = valuation + investment;
+            // 고객 지표 계산
+            const customerGrowth = previousCustomers ? ((totalCustomers - previousCustomers) / previousCustomers * 100) : 0;
+            const revenuePerCustomer = totalCustomers ? (mainRevenue / totalCustomers) : 0;
+            const netMargin = mainRevenue ? (netIncome / mainRevenue * 100) : 0;
+            
+            // === 업종별 기본 배수 설정 ===
+            let baseMultiplier = 5; // 기본값
+            
+            switch(industry) {
+                case 'HaaS':
+                    baseMultiplier = 8; // 하드웨어 서비스 특화
+                    break;
+                case 'SaaS':
+                    baseMultiplier = 7; // 소프트웨어 서비스
+                    break;
+                case 'IoT/하드웨어':
+                    baseMultiplier = 6; // IoT/하드웨어
+                    break;
+                case '핀테크':
+                    baseMultiplier = 6; // 핀테크
+                    break;
+                case 'E-commerce':
+                    baseMultiplier = 4; // 전자상거래
+                    break;
+                case '헬스테크':
+                    baseMultiplier = 7; // 헬스테크
+                    break;
+                default:
+                    baseMultiplier = 5;
+            }
+            
+            let multiplier = baseMultiplier;
+            
+            // === 구독 매출 비중 조정 (가장 중요) ===
+            if (subRatio > 80) multiplier += 4; // 구독 80% 이상
+            else if (subRatio > 70) multiplier += 3; // 구독 70% 이상
+            else if (subRatio > 50) multiplier += 2; // 구독 50% 이상
+            else if (subRatio > 30) multiplier += 1; // 구독 30% 이상
+            
+            // === 매출 성장률 조정 ===
+            if (growth > 100) multiplier += 3; // 2배 이상 성장
+            else if (growth > 50) multiplier += 2; // 50% 이상 성장
+            else if (growth > 30) multiplier += 1; // 30% 이상 성장
+            else if (growth < -10) multiplier -= 1; // 10% 이상 감소시 페널티
+            
+            // === 고객 성장률 조정 ===
+            if (customerGrowth > 100) multiplier += 2; // 고객 2배 이상 증가
+            else if (customerGrowth > 50) multiplier += 1; // 고객 50% 이상 증가
+            else if (customerGrowth < -10) multiplier -= 0.5; // 고객 감소시 페널티
+            
+            // === 고객당 매출 조정 (Unit Economics) ===
+            if (revenuePerCustomer > 10000) multiplier += 1.5; // 고객당 연 1000만원 이상
+            else if (revenuePerCustomer > 5000) multiplier += 1; // 고객당 연 500만원 이상
+            else if (revenuePerCustomer > 2000) multiplier += 0.5; // 고객당 연 200만원 이상
+            
+            // === 앱 활성도 조정 ===
+            const appEngagement = totalCustomers && mau ? (mau / totalCustomers) : 0;
+            if (appEngagement > 10) multiplier += 1.5; // MAU가 고객 수의 10배 이상
+            else if (appEngagement > 5) multiplier += 1; // MAU가 고객 수의 5배 이상
+            else if (appEngagement > 2) multiplier += 0.5; // MAU가 고객 수의 2배 이상
+            
+            // === 순이익률 조정 (완화) ===
+            if (netMargin > 50) multiplier += 1; // 순이익률 50% 이상 (완화)
+            else if (netMargin > 30) multiplier += 0.5; // 순이익률 30% 이상
+            else if (netMargin < -20) multiplier -= 0.5; // 손실 20% 이상시 소폭 페널티
+            
+            // === 최소/최대 배수 설정 ===
+            multiplier = Math.max(multiplier, baseMultiplier * 0.7); // 최소 기본배수의 70%
+            multiplier = Math.min(multiplier, baseMultiplier * 3); // 최대 기본배수의 3배
+            
+            // === 밸류에이션 계산 ===
+            const valuation = mainRevenue * multiplier;
+            
+            // === 간소화된 DCF (참고용) ===
+            const year1Revenue = mainRevenue * (1 + Math.max(growth/100, 0.1)); // 최소 10% 성장 가정
+            const year2Revenue = year1Revenue * (1 + Math.max(growth/100 * 0.8, 0.05)); // 성장률 둔화
+            const simpleNetMargin = Math.max(netMargin/100, 0.1); // 최소 10% 순이익률 가정
+            const discountRate = 0.15;
+            
+            const simpleDCF = (
+                (year1Revenue * simpleNetMargin) / (1 + discountRate) +
+                (year2Revenue * simpleNetMargin) / Math.pow(1 + discountRate, 2)
+            );
+            
+            // === 최종 밸류에이션 (PSR 중심) ===
+            const finalValuation = valuation * 0.9 + simpleDCF * 0.1; // PSR 90% + DCF 10%
+            const postMoney = finalValuation + investment;
             const equity = (investment / postMoney * 100);
             
-            // 결과 표시 (천원 단위 콤마 포함)
-            setText('totalRevenue', total.toLocaleString() + '천원');
-            setText('valuation', format(valuation));
+            // === 결과 표시 ===
+            setText('totalRevenue', mainRevenue.toLocaleString() + '천원');
+            setText('valuation', format(finalValuation));
             setText('postMoney', format(postMoney));
             setText('equity', equity.toFixed(1));
+            setText('industryMultiple', baseMultiplier.toFixed(1) + '배');
             setText('growthRate', growth.toFixed(1) + '%');
             setText('customerGrowthRate', customerGrowth.toFixed(1) + '%');
             setText('subscriptionRatio', subRatio.toFixed(1) + '%');
             setText('psrMultiple', multiplier.toFixed(1) + '배');
-            setText('revenuePerCustomer', (revenuePerCustomer/10).toFixed(0) + '만원'); // 천원→만원 변환
-            setText('sharePrice', (valuation / 4000).toFixed(0) + '원'); // 400만주 가정
+            setText('revenuePerCustomer', (revenuePerCustomer/10).toFixed(0) + '만원');
+            setText('sharePrice', (finalValuation / 4000).toFixed(0) + '원');
             setText('investAmount', format(investment) + '억원');
             setText('finalEquity', equity.toFixed(1) + '%');
-            setText('conversionPrice', (investment * 1000 / (equity * 40)).toFixed(0) + '원'); // 천원 기준 조정
+            setText('conversionPrice', (investment * 1000 / (equity * 40)).toFixed(0) + '원');
         }
 
         function downloadReport() {
