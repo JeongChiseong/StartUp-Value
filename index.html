@@ -93,11 +93,23 @@
                                 <span class="text-xs text-gray-500">작년 전체 매출 (성장률 계산용)</span>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">순이익 (올해 예상)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">전년도 순이익</label>
+                                <input type="text" id="previousNetIncome" placeholder="25,000" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                                       oninput="formatNumber(this); calculate()">
+                                <span class="text-xs text-gray-500">작년 순이익 (수익성 개선 계산용)</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">올해 순이익 (예상)</label>
                                 <input type="text" id="netIncome" placeholder="150,000" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
-                                <span class="text-xs text-gray-500">최종 순이익 (있으면 입력)</span>
+                                <span class="text-xs text-gray-500">올해 최종 순이익</span>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded-lg flex items-center">
+                                <span class="text-sm text-green-700">💡 수익성 개선도: <span id="profitabilityImprovement" class="font-bold">0%p</span></span>
                             </div>
                         </div>
                     </div>
@@ -258,6 +270,7 @@
             const hardware = getValue('hardwareSales');
             const subscription = getValue('subscriptionSales');
             const previous = getValue('previousRevenue');
+            const previousNetIncome = getValue('previousNetIncome');
             const netIncome = getValue('netIncome');
             const investment = getValue('investment');
             const industry = document.getElementById('industry').value;
@@ -283,7 +296,20 @@
             // 고객 지표 계산
             const customerGrowth = previousCustomers ? ((totalCustomers - previousCustomers) / previousCustomers * 100) : 0;
             const revenuePerCustomer = totalCustomers ? (mainRevenue / totalCustomers) : 0;
-            const netMargin = mainRevenue ? (netIncome / mainRevenue * 100) : 0;
+            
+            // === 수익성 개선도 계산 (실제 데이터 기반) ===
+            let profitabilityImprovement = 0;
+            let currentNetMargin = 0;
+            let previousNetMargin = 0;
+            
+            if (mainRevenue && netIncome) {
+                currentNetMargin = (netIncome / mainRevenue) * 100;
+            }
+            
+            if (previous && previousNetIncome) {
+                previousNetMargin = (previousNetIncome / previous) * 100;
+                profitabilityImprovement = currentNetMargin - previousNetMargin;
+            }
             
             // === 업종별 기본 배수 설정 ===
             let baseMultiplier = 5; // 기본값
@@ -342,9 +368,15 @@
             else if (appEngagement > 2) multiplier += 0.5; // MAU가 고객 수의 2배 이상
             
             // === 순이익률 조정 (완화) ===
-            if (netMargin > 50) multiplier += 1; // 순이익률 50% 이상 (완화)
-            else if (netMargin > 30) multiplier += 0.5; // 순이익률 30% 이상
-            else if (netMargin < -20) multiplier -= 0.5; // 손실 20% 이상시 소폭 페널티
+            if (currentNetMargin > 50) multiplier += 1; // 순이익률 50% 이상
+            else if (currentNetMargin > 30) multiplier += 0.5; // 순이익률 30% 이상
+            else if (currentNetMargin < -20) multiplier -= 0.5; // 손실 20% 이상시 소폭 페널티
+            
+            // === 수익성 개선도 조정 (새로 추가!) ===
+            if (profitabilityImprovement > 20) multiplier += 2; // 수익성 20%p 이상 개선
+            else if (profitabilityImprovement > 10) multiplier += 1; // 수익성 10%p 이상 개선
+            else if (profitabilityImprovement > 5) multiplier += 0.5; // 수익성 5%p 이상 개선
+            else if (profitabilityImprovement < -10) multiplier -= 0.5; // 수익성 10%p 이상 악화시 페널티
             
             // === 최소/최대 배수 설정 ===
             multiplier = Math.max(multiplier, baseMultiplier * 0.7); // 최소 기본배수의 70%
@@ -356,7 +388,7 @@
             // === 간소화된 DCF (참고용) ===
             const year1Revenue = mainRevenue * (1 + Math.max(growth/100, 0.1)); // 최소 10% 성장 가정
             const year2Revenue = year1Revenue * (1 + Math.max(growth/100 * 0.8, 0.05)); // 성장률 둔화
-            const simpleNetMargin = Math.max(netMargin/100, 0.1); // 최소 10% 순이익률 가정
+            const simpleNetMargin = Math.max(currentNetMargin/100, 0.1); // 최소 10% 순이익률 가정
             const discountRate = 0.15;
             
             const simpleDCF = (
@@ -384,6 +416,7 @@
             setText('investAmount', format(investment) + '억원');
             setText('finalEquity', equity.toFixed(1) + '%');
             setText('conversionPrice', (investment * 1000 / (equity * 40)).toFixed(0) + '원');
+            setText('profitabilityImprovement', profitabilityImprovement.toFixed(1) + '%p');
         }
 
         function downloadReport() {
@@ -448,17 +481,18 @@
             
             // 매출 정보
             ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            ctx.fillRect(20, currentY, canvas.width-40, 140);
+            ctx.fillRect(20, currentY, canvas.width-40, 160);
             ctx.fillStyle = 'white';
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             ctx.fillText('📊 매출 정보', canvas.width/2, currentY + 25);
             
             const revenueData = [
-                ['하드웨어 매출', getValue('hardwareSales').toLocaleString() + '천원'],
-                ['구독 매출', getValue('subscriptionSales').toLocaleString() + '천원'],
-                ['전년도 매출', getValue('previousRevenue').toLocaleString() + '천원'],
-                ['순이익', getValue('netIncome').toLocaleString() + '천원']
+                ['올해 하드웨어 매출', getValue('hardwareSales').toLocaleString() + '천원'],
+                ['올해 구독 매출', getValue('subscriptionSales').toLocaleString() + '천원'],
+                ['전년도 총매출', getValue('previousRevenue').toLocaleString() + '천원'],
+                ['전년도 순이익', getValue('previousNetIncome').toLocaleString() + '천원'],
+                ['올해 순이익', getValue('netIncome').toLocaleString() + '천원']
             ];
             
             ctx.font = '14px Arial';
@@ -471,7 +505,7 @@
                 ctx.fillText(value, 300, y);
             });
             
-            currentY += 160;
+            currentY += 180;
             
             // 고객 지표
             ctx.fillStyle = 'rgba(255,255,255,0.1)';
