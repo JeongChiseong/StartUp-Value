@@ -106,13 +106,47 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">투자 유치 목표</label>
-                            <input type="text" id="investment" value="4,0000" 
+                            <input type="text" id="investment" value="40,000" 
                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                    oninput="formatNumber(this); calculate()">
                             <span class="text-xs text-gray-500">단위: 만원 (예: 40,000 = 4억원)</span>
                         </div>
-                        <div class="text-xs text-gray-400 bg-gray-50 p-3 rounded">
-                            💡 고객 수는 매출 데이터에서 자동으로 계산에 반영됩니다
+                    </div>
+                </div>
+
+                <!-- 고객 지표 -->
+                <div class="input-box">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-800">👥 고객 지표</h2>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">전년도 고객수</label>
+                                <input type="text" id="previousCustomers" placeholder="30" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                                       oninput="formatNumber(this); calculate()">
+                                <span class="text-xs text-gray-500">작년 말 기준</span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">올해 신규 고객</label>
+                                <input type="text" id="newCustomers" placeholder="20" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                                       oninput="formatNumber(this); calculate()">
+                                <span class="text-xs text-gray-500">올해 추가</span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">현재 총 고객수</label>
+                                <input type="text" id="totalCustomers" placeholder="50" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                                       oninput="formatNumber(this); calculate()">
+                                <span class="text-xs text-gray-500">현재 계약 중</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">전용 앱 MAU (월활성유저)</label>
+                            <input type="text" id="mau" placeholder="500" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                                   oninput="formatNumber(this); calculate()">
+                            <span class="text-xs text-gray-500">월평균 앱 사용자 수 (명)</span>
                         </div>
                     </div>
                 </div>
@@ -148,12 +182,20 @@
                             <span id="growthRate" class="font-semibold">0%</span>
                         </div>
                         <div class="flex justify-between">
+                            <span class="text-gray-600">고객 성장률</span>
+                            <span id="customerGrowthRate" class="font-semibold">0%</span>
+                        </div>
+                        <div class="flex justify-between">
                             <span class="text-gray-600">구독 매출 비중</span>
                             <span id="subscriptionRatio" class="font-semibold">0%</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">PSR 배수</span>
                             <span id="psrMultiple" class="font-semibold">0배</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">고객당 연매출</span>
+                            <span id="revenuePerCustomer" class="font-semibold">0만원</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">주당 가치</span>
@@ -212,16 +254,46 @@
             const netIncome = getValue('netIncome');
             const investment = getValue('investment');
             
+            // 고객 지표
+            const previousCustomers = getValue('previousCustomers');
+            const newCustomers = getValue('newCustomers');
+            const totalCustomers = getValue('totalCustomers');
+            const mau = getValue('mau');
+            
             const total = hardware + subscription;
             const growth = previous ? ((total - previous) / previous * 100) : 0;
             const subRatio = total ? (subscription / total * 100) : 0;
             
-            // PSR 배수 계산 (간소화)
+            // 고객 성장률 계산
+            const customerGrowth = previousCustomers ? ((totalCustomers - previousCustomers) / previousCustomers * 100) : 0;
+            
+            // 고객당 연매출 계산
+            const revenuePerCustomer = totalCustomers ? (total / totalCustomers) : 0;
+            
+            // PSR 배수 계산 (고객 지표 반영)
             let multiplier = 5;
+            
+            // 구독 매출 비중에 따른 배수 조정
             if (subRatio > 70) multiplier += 3;
             else if (subRatio > 50) multiplier += 2;
+            
+            // 매출 성장률에 따른 배수 조정
             if (growth > 50) multiplier += 2;
             else if (growth > 30) multiplier += 1;
+            
+            // 고객 성장률에 따른 배수 조정 (새로 추가)
+            if (customerGrowth > 100) multiplier += 2; // 고객 2배 이상 증가
+            else if (customerGrowth > 50) multiplier += 1; // 고객 50% 이상 증가
+            
+            // 고객당 매출이 높으면 배수 증가 (고객 단가가 높은 B2B 모델)
+            if (revenuePerCustomer > 1000) multiplier += 1; // 고객당 연 1000만원 이상
+            else if (revenuePerCustomer > 500) multiplier += 0.5; // 고객당 연 500만원 이상
+            
+            // MAU 대비 고객 비율 (앱 활성도)
+            const appEngagement = totalCustomers && mau ? (mau / totalCustomers) : 0;
+            if (appEngagement > 5) multiplier += 1; // MAU가 고객 수의 5배 이상 (높은 활성도)
+            else if (appEngagement > 2) multiplier += 0.5; // MAU가 고객 수의 2배 이상
+            
             multiplier = Math.max(multiplier, 3);
             
             const valuation = total * multiplier;
@@ -234,8 +306,10 @@
             setText('postMoney', format(postMoney));
             setText('equity', equity.toFixed(1));
             setText('growthRate', growth.toFixed(1) + '%');
+            setText('customerGrowthRate', customerGrowth.toFixed(1) + '%');
             setText('subscriptionRatio', subRatio.toFixed(1) + '%');
             setText('psrMultiple', multiplier.toFixed(1) + '배');
+            setText('revenuePerCustomer', revenuePerCustomer.toFixed(0) + '만원');
             setText('sharePrice', (valuation / 4).toFixed(0) + '원');
             setText('investAmount', format(investment) + '억원');
             setText('finalEquity', equity.toFixed(1) + '%');
@@ -245,44 +319,179 @@
         function downloadReport() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = 800; canvas.height = 600;
             
-            // 배경
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#667eea'); gradient.addColorStop(1, '#764ba2');
-            ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // 모바일 친화적 사이즈 (세로형)
+            canvas.width = 600; 
+            canvas.height = 1000;
             
-            // 제목
+            // 배경 그라디언트
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#667eea'); 
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 제목 섹션
             const company = document.getElementById('companyName').value || '스타트업';
-            ctx.fillStyle = 'white'; ctx.font = 'bold 32px Arial'; ctx.textAlign = 'center';
-            ctx.fillText(`${company} 밸류에이션 분석`, canvas.width/2, 60);
+            ctx.fillStyle = 'white'; 
+            ctx.font = 'bold 28px Arial'; 
+            ctx.textAlign = 'center';
+            ctx.fillText(`${company}`, canvas.width/2, 50);
+            ctx.font = 'bold 20px Arial';
+            ctx.fillText('밸류에이션 분석 결과', canvas.width/2, 80);
             
             // 날짜
-            ctx.font = '16px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.9)';
-            ctx.fillText(`분석일: ${new Date().toLocaleDateString('ko-KR')}`, canvas.width/2, 90);
+            ctx.font = '14px Arial'; 
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.fillText(`분석일: ${new Date().toLocaleDateString('ko-KR')}`, canvas.width/2, 105);
             
-            // 메인 지표
-            const metrics = [
-                ['기업가치', document.getElementById('valuation').textContent + '억원', 150],
-                ['투자 후 가치', document.getElementById('postMoney').textContent + '억원', 220],
-                ['취득 지분율', document.getElementById('equity').textContent + '%', 290],
-                ['매출 성장률', document.getElementById('growthRate').textContent, 360]
+            // === 핵심 결과 (두괄식) ===
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillRect(20, 130, canvas.width-40, 180);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('💰 핵심 결과', canvas.width/2, 155);
+            
+            const coreResults = [
+                ['기업가치', document.getElementById('valuation').textContent + '억원'],
+                ['투자 후 가치', document.getElementById('postMoney').textContent + '억원'],
+                ['취득 지분율', document.getElementById('equity').textContent + '%'],
+                ['PSR 배수', document.getElementById('psrMultiple').textContent]
             ];
             
-            ctx.fillStyle = 'rgba(255,255,255,0.2)'; 
-            metrics.forEach(([label, value, y]) => {
-                ctx.fillRect(50, y-20, 700, 50);
-                ctx.fillStyle = 'white'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left';
-                ctx.fillText(label, 70, y); ctx.font = 'bold 24px Arial';
-                ctx.fillText(value, 400, y); ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'left';
+            coreResults.forEach(([label, value], index) => {
+                const y = 185 + index * 30;
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.fillText(label, 40, y);
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 18px Arial';
+                ctx.fillText(value, 300, y);
+                ctx.font = 'bold 16px Arial';
             });
+            
+            // === 입력 데이터 정보 ===
+            let currentY = 340;
+            
+            // 매출 정보
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillRect(20, currentY, canvas.width-40, 120);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('📊 매출 정보', canvas.width/2, currentY + 25);
+            
+            const revenueData = [
+                ['하드웨어 매출', getValue('hardwareSales').toLocaleString() + '만원'],
+                ['구독 매출', getValue('subscriptionSales').toLocaleString() + '만원'],
+                ['전년도 매출', getValue('previousRevenue').toLocaleString() + '만원']
+            ];
+            
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            revenueData.forEach(([label, value], index) => {
+                const y = currentY + 50 + index * 22;
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.fillText(label, 40, y);
+                ctx.fillStyle = 'white';
+                ctx.fillText(value, 300, y);
+            });
+            
+            currentY += 140;
+            
+            // 고객 지표
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillRect(20, currentY, canvas.width-40, 140);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('👥 고객 지표', canvas.width/2, currentY + 25);
+            
+            const customerData = [
+                ['전년도 고객수', getValue('previousCustomers').toLocaleString() + '명'],
+                ['올해 신규 고객', getValue('newCustomers').toLocaleString() + '명'],
+                ['현재 총 고객수', getValue('totalCustomers').toLocaleString() + '명'],
+                ['월활성유저(MAU)', getValue('mau').toLocaleString() + '명']
+            ];
+            
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            customerData.forEach(([label, value], index) => {
+                const y = currentY + 50 + index * 22;
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.fillText(label, 40, y);
+                ctx.fillStyle = 'white';
+                ctx.fillText(value, 300, y);
+            });
+            
+            currentY += 160;
+            
+            // 성장률 분석
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillRect(20, currentY, canvas.width-40, 120);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('📈 성장률 분석', canvas.width/2, currentY + 25);
+            
+            const growthData = [
+                ['매출 성장률', document.getElementById('growthRate').textContent],
+                ['고객 성장률', document.getElementById('customerGrowthRate').textContent],
+                ['고객당 연매출', document.getElementById('revenuePerCustomer').textContent]
+            ];
+            
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            growthData.forEach(([label, value], index) => {
+                const y = currentY + 50 + index * 22;
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.fillText(label, 40, y);
+                ctx.fillStyle = 'white';
+                ctx.fillText(value, 300, y);
+            });
+            
+            currentY += 140;
+            
+            // 투자 조건
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillRect(20, currentY, canvas.width-40, 100);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('💼 투자 조건', canvas.width/2, currentY + 25);
+            
+            const investmentData = [
+                ['투자금액', document.getElementById('investAmount').textContent],
+                ['전환가격', document.getElementById('conversionPrice').textContent]
+            ];
+            
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            investmentData.forEach(([label, value], index) => {
+                const y = currentY + 50 + index * 22;
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.fillText(label, 40, y);
+                ctx.fillStyle = 'white';
+                ctx.fillText(value, 300, y);
+            });
+            
+            // 워터마크
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Startup Valuation Calculator', canvas.width/2, canvas.height - 20);
             
             // 다운로드
             canvas.toBlob(blob => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url; a.download = `${company}_밸류에이션_${new Date().toISOString().slice(0,10)}.png`;
-                a.click(); URL.revokeObjectURL(url);
+                a.href = url; 
+                a.download = `${company}_밸류에이션_${new Date().toISOString().slice(0,10)}.png`;
+                a.click(); 
+                URL.revokeObjectURL(url);
             });
         }
 
