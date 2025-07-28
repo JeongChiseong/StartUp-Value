@@ -59,19 +59,19 @@
 
                 <!-- 매출 정보 -->
                 <div class="input-box">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-800">💰 매출 정보 (올해 실적, 만원)</h2>
+                    <h2 class="text-lg font-semibold mb-4 text-gray-800">💰 매출 정보 (올해 실적, 천원)</h2>
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">하드웨어 매출</label>
-                                <input type="text" id="hardwareSales" placeholder="3,630" 
+                                <input type="text" id="hardwareSales" placeholder="36,300" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
                                 <span class="text-xs text-gray-500">장비 판매/보증금</span>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">구독 매출</label>
-                                <input type="text" id="subscriptionSales" placeholder="37,926" 
+                                <input type="text" id="subscriptionSales" placeholder="379,260" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
                                 <span class="text-xs text-gray-500">월 구독료 × 12개월</span>
@@ -79,19 +79,19 @@
                         </div>
                         <div class="bg-blue-50 p-3 rounded-lg">
                             <span class="text-sm font-medium">총 연매출: </span>
-                            <span id="totalRevenue" class="text-lg font-bold text-blue-600">0만원</span>
+                            <span id="totalRevenue" class="text-lg font-bold text-blue-600">0천원</span>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">전년도 매출</label>
-                                <input type="text" id="previousRevenue" placeholder="25,000" 
+                                <input type="text" id="previousRevenue" placeholder="250,000" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
                                 <span class="text-xs text-gray-500">작년 동기 총매출</span>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">순이익</label>
-                                <input type="text" id="netIncome" placeholder="15,000" 
+                                <input type="text" id="netIncome" placeholder="150,000" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                        oninput="formatNumber(this); calculate()">
                                 <span class="text-xs text-gray-500">올해 순이익</span>
@@ -106,10 +106,10 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">투자 유치 목표</label>
-                            <input type="text" id="investment" value="40,000" 
+                            <input type="text" id="investment" value="400,000" 
                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
                                    oninput="formatNumber(this); calculate()">
-                            <span class="text-xs text-gray-500">단위: 만원 (예: 40,000 = 4억원)</span>
+                            <span class="text-xs text-gray-500">단위: 천원 (예: 400,000 = 4억원)</span>
                         </div>
                     </div>
                 </div>
@@ -245,7 +245,7 @@
             return parseFloat(value) || 0; 
         }
         function setText(id, value) { document.getElementById(id).textContent = value; }
-        function format(num) { return (num / 10000).toFixed(1); }
+        function format(num) { return (num / 100000).toFixed(1); }
 
         function calculate() {
             const hardware = getValue('hardwareSales');
@@ -267,33 +267,55 @@
             // 고객 성장률 계산
             const customerGrowth = previousCustomers ? ((totalCustomers - previousCustomers) / previousCustomers * 100) : 0;
             
-            // 고객당 연매출 계산
+            // 고객당 연매출 계산 (천원 단위)
             const revenuePerCustomer = totalCustomers ? (total / totalCustomers) : 0;
             
-            // PSR 배수 계산 (고객 지표 반영)
+            // 순이익률 계산
+            const netMargin = total ? (netIncome / total * 100) : 0;
+            
+            // === 개선된 PSR 배수 계산 (전년도 매출과 순이익 반영) ===
             let multiplier = 5;
             
-            // 구독 매출 비중에 따른 배수 조정
+            // 1. 구독 매출 비중에 따른 배수 조정
             if (subRatio > 70) multiplier += 3;
             else if (subRatio > 50) multiplier += 2;
+            else if (subRatio > 30) multiplier += 1;
             
-            // 매출 성장률에 따른 배수 조정
-            if (growth > 50) multiplier += 2;
+            // 2. 매출 성장률에 따른 배수 조정 (전년도 매출 반영)
+            if (growth > 100) multiplier += 3; // 2배 이상 성장
+            else if (growth > 50) multiplier += 2;
             else if (growth > 30) multiplier += 1;
+            else if (growth < 0) multiplier -= 1; // 매출 감소시 페널티
             
-            // 고객 성장률에 따른 배수 조정 (새로 추가)
+            // 3. 순이익률에 따른 배수 조정 (수익성 반영)
+            if (netMargin > 40) multiplier += 2; // 순이익률 40% 이상
+            else if (netMargin > 25) multiplier += 1; // 순이익률 25% 이상
+            else if (netMargin > 15) multiplier += 0.5; // 순이익률 15% 이상
+            else if (netMargin < 5) multiplier -= 0.5; // 낮은 수익성 페널티
+            
+            // 4. 고객 성장률에 따른 배수 조정
             if (customerGrowth > 100) multiplier += 2; // 고객 2배 이상 증가
             else if (customerGrowth > 50) multiplier += 1; // 고객 50% 이상 증가
+            else if (customerGrowth < 0) multiplier -= 0.5; // 고객 감소시 페널티
             
-            // 고객당 매출이 높으면 배수 증가 (고객 단가가 높은 B2B 모델)
-            if (revenuePerCustomer > 1000) multiplier += 1; // 고객당 연 1000만원 이상
-            else if (revenuePerCustomer > 500) multiplier += 0.5; // 고객당 연 500만원 이상
+            // 5. 고객당 매출 단가에 따른 배수 조정 (천원 기준)
+            if (revenuePerCustomer > 10000) multiplier += 1; // 고객당 연 1000만원 이상
+            else if (revenuePerCustomer > 5000) multiplier += 0.5; // 고객당 연 500만원 이상
             
-            // MAU 대비 고객 비율 (앱 활성도)
+            // 6. MAU 대비 고객 비율 (앱 활성도)
             const appEngagement = totalCustomers && mau ? (mau / totalCustomers) : 0;
-            if (appEngagement > 5) multiplier += 1; // MAU가 고객 수의 5배 이상 (높은 활성도)
+            if (appEngagement > 5) multiplier += 1; // MAU가 고객 수의 5배 이상
             else if (appEngagement > 2) multiplier += 0.5; // MAU가 고객 수의 2배 이상
             
+            // 7. 전년도 대비 수익성 개선도 (추가 지표)
+            if (previous && netIncome) {
+                const previousNetMargin = 15; // 전년도 순이익률 가정 (15%)
+                const marginImprovement = netMargin - previousNetMargin;
+                if (marginImprovement > 10) multiplier += 1; // 수익성 10%p 이상 개선
+                else if (marginImprovement > 5) multiplier += 0.5; // 수익성 5%p 이상 개선
+            }
+            
+            // 최소 배수 보장
             multiplier = Math.max(multiplier, 3);
             
             const valuation = total * multiplier;
@@ -301,7 +323,7 @@
             const equity = (investment / postMoney * 100);
             
             // 결과 표시 (천원 단위 콤마 포함)
-            setText('totalRevenue', total.toLocaleString() + '만원');
+            setText('totalRevenue', total.toLocaleString() + '천원');
             setText('valuation', format(valuation));
             setText('postMoney', format(postMoney));
             setText('equity', equity.toFixed(1));
@@ -309,11 +331,11 @@
             setText('customerGrowthRate', customerGrowth.toFixed(1) + '%');
             setText('subscriptionRatio', subRatio.toFixed(1) + '%');
             setText('psrMultiple', multiplier.toFixed(1) + '배');
-            setText('revenuePerCustomer', revenuePerCustomer.toFixed(0) + '만원');
-            setText('sharePrice', (valuation / 4).toFixed(0) + '원');
+            setText('revenuePerCustomer', (revenuePerCustomer/10).toFixed(0) + '만원'); // 천원→만원 변환
+            setText('sharePrice', (valuation / 4000).toFixed(0) + '원'); // 400만주 가정
             setText('investAmount', format(investment) + '억원');
             setText('finalEquity', equity.toFixed(1) + '%');
-            setText('conversionPrice', (investment * 10000 / (equity * 4)).toFixed(0) + '원');
+            setText('conversionPrice', (investment * 1000 / (equity * 40)).toFixed(0) + '원'); // 천원 기준 조정
         }
 
         function downloadReport() {
@@ -378,16 +400,17 @@
             
             // 매출 정보
             ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            ctx.fillRect(20, currentY, canvas.width-40, 120);
+            ctx.fillRect(20, currentY, canvas.width-40, 140);
             ctx.fillStyle = 'white';
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             ctx.fillText('📊 매출 정보', canvas.width/2, currentY + 25);
             
             const revenueData = [
-                ['하드웨어 매출', getValue('hardwareSales').toLocaleString() + '만원'],
-                ['구독 매출', getValue('subscriptionSales').toLocaleString() + '만원'],
-                ['전년도 매출', getValue('previousRevenue').toLocaleString() + '만원']
+                ['하드웨어 매출', getValue('hardwareSales').toLocaleString() + '천원'],
+                ['구독 매출', getValue('subscriptionSales').toLocaleString() + '천원'],
+                ['전년도 매출', getValue('previousRevenue').toLocaleString() + '천원'],
+                ['순이익', getValue('netIncome').toLocaleString() + '천원']
             ];
             
             ctx.font = '14px Arial';
@@ -400,7 +423,7 @@
                 ctx.fillText(value, 300, y);
             });
             
-            currentY += 140;
+            currentY += 160;
             
             // 고객 지표
             ctx.fillStyle = 'rgba(255,255,255,0.1)';
