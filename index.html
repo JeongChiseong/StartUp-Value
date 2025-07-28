@@ -15,6 +15,12 @@
         .metric-box {
             @apply bg-white bg-opacity-20 rounded-lg p-4 backdrop-blur-sm;
         }
+        body {
+            font-weight: 600;
+        }
+        input, select {
+            font-weight: 500;
+        }
     </style>
 </head>
 <body class="bg-gray-500 min-h-screen">
@@ -53,21 +59,21 @@
 
                 <!-- 매출 정보 -->
                 <div class="input-box">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-800">💰 매출 정보 (연간, 만원)</h2>
+                    <h2 class="text-lg font-semibold mb-4 text-gray-800">💰 매출 정보 (올해 실적, 만원)</h2>
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">하드웨어 매출</label>
-                                <input type="number" id="hardwareSales" placeholder="3630" 
+                                <input type="text" id="hardwareSales" placeholder="3,630" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                                       oninput="calculate()">
+                                       oninput="formatNumber(this); calculate()">
                                 <span class="text-xs text-gray-500">장비 판매/보증금</span>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">구독 매출</label>
-                                <input type="number" id="subscriptionSales" placeholder="37926" 
+                                <input type="text" id="subscriptionSales" placeholder="37,926" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                                       oninput="calculate()">
+                                       oninput="formatNumber(this); calculate()">
                                 <span class="text-xs text-gray-500">월 구독료 × 12개월</span>
                             </div>
                         </div>
@@ -78,15 +84,17 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">전년도 매출</label>
-                                <input type="number" id="previousRevenue" placeholder="25000" 
+                                <input type="text" id="previousRevenue" placeholder="25,000" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                                       oninput="calculate()">
+                                       oninput="formatNumber(this); calculate()">
+                                <span class="text-xs text-gray-500">작년 동기 총매출</span>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">순이익</label>
-                                <input type="number" id="netIncome" placeholder="15000" 
+                                <input type="text" id="netIncome" placeholder="15,000" 
                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                                       oninput="calculate()">
+                                       oninput="formatNumber(this); calculate()">
+                                <span class="text-xs text-gray-500">올해 순이익</span>
                             </div>
                         </div>
                     </div>
@@ -96,21 +104,15 @@
                 <div class="input-box">
                     <h2 class="text-lg font-semibold mb-4 text-gray-800">🎯 투자 정보</h2>
                     <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">투자 유치 목표</label>
-                                <input type="number" id="investment" value="40000" 
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                                       oninput="calculate()">
-                                <span class="text-xs text-gray-500">단위: 만원</span>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">고객 수</label>
-                                <input type="number" id="customers" placeholder="50" 
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                                       oninput="calculate()">
-                                <span class="text-xs text-gray-500">계약 고객 수</span>
-                            </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">투자 유치 목표</label>
+                            <input type="text" id="investment" value="4,0000" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                                   oninput="formatNumber(this); calculate()">
+                            <span class="text-xs text-gray-500">단위: 만원 (예: 40,000 = 4억원)</span>
+                        </div>
+                        <div class="text-xs text-gray-400 bg-gray-50 p-3 rounded">
+                            💡 고객 수는 매출 데이터에서 자동으로 계산에 반영됩니다
                         </div>
                     </div>
                 </div>
@@ -189,7 +191,17 @@
     </div>
 
     <script>
-        function getValue(id) { return parseFloat(document.getElementById(id).value) || 0; }
+        function formatNumber(input) {
+            let value = input.value.replace(/,/g, '');
+            if (!isNaN(value) && value !== '') {
+                input.value = parseInt(value).toLocaleString();
+            }
+        }
+
+        function getValue(id) { 
+            const value = document.getElementById(id).value.replace(/,/g, '');
+            return parseFloat(value) || 0; 
+        }
         function setText(id, value) { document.getElementById(id).textContent = value; }
         function format(num) { return (num / 10000).toFixed(1); }
 
@@ -216,7 +228,7 @@
             const postMoney = valuation + investment;
             const equity = (investment / postMoney * 100);
             
-            // 결과 표시
+            // 결과 표시 (천원 단위 콤마 포함)
             setText('totalRevenue', total.toLocaleString() + '만원');
             setText('valuation', format(valuation));
             setText('postMoney', format(postMoney));
@@ -241,7 +253,7 @@
             ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             // 제목
-            const company = getValue('companyName') || '스타트업';
+            const company = document.getElementById('companyName').value || '스타트업';
             ctx.fillStyle = 'white'; ctx.font = 'bold 32px Arial'; ctx.textAlign = 'center';
             ctx.fillText(`${company} 밸류에이션 분석`, canvas.width/2, 60);
             
